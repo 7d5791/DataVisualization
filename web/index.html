@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VeReMi Viz | Análisis Interactivo</title>
+    <title>VeReMi Viz | Análisis de Ataques</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -12,7 +12,6 @@
         .filter-chip {
             transition: all 0.2s ease;
             cursor: pointer;
-            user-select: none;
         }
         .filter-chip.active {
             background-color: #0ea5e9;
@@ -29,80 +28,73 @@
         </div>
     </nav>
 
-    <div class="max-w-screen-2xl mx-auto px-8 pt-8 pb-4">
-        <h1 class="text-4xl font-bold tracking-tight">Explorador de Ataques en VANETs</h1>
-        <p class="text-slate-600 mt-2">Usa los filtros para explorar los datos interactivamente.</p>
+    <div class="max-w-screen-2xl mx-auto px-8 pt-8">
+        <h1 class="text-4xl font-bold">Explorador Interactivo de Ataques en VANETs</h1>
+        <p class="text-slate-600 mt-2">Usa los filtros de abajo para explorar cómo se comportan los diferentes tipos de ataques.</p>
     </div>
 
     <!-- FILTROS -->
-    <div class="max-w-screen-2xl mx-auto px-8">
-        <div class="bg-white border rounded-3xl p-6 mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-semibold">Filtros</h3>
-                <button onclick="resetAllFilters()"
-                        class="text-sm px-4 py-2 border rounded-2xl hover:bg-slate-100 flex items-center gap-x-2">
-                    <i class="fa-solid fa-undo"></i>
-                    <span>Resetear todo</span>
+    <div class="max-w-screen-2xl mx-auto px-8 mt-6">
+        <div class="bg-white border rounded-3xl p-6">
+            <div class="flex justify-between mb-4">
+                <h3 class="font-semibold text-lg">Filtros</h3>
+                <button onclick="resetFilters()" class="text-sm px-4 py-2 border rounded-2xl hover:bg-slate-100">
+                    <i class="fa-solid fa-undo mr-2"></i>Resetear
                 </button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-                <!-- Scenario -->
                 <div>
-                    <label class="text-sm font-semibold text-slate-600 block mb-2">Escenario</label>
-                    <div id="filter-scenario" class="flex flex-wrap gap-2"></div>
+                    <label class="text-sm font-semibold">Escenario</label>
+                    <div id="filter-scenario" class="flex flex-wrap gap-2 mt-2"></div>
                 </div>
-
-                <!-- Density -->
                 <div>
-                    <label class="text-sm font-semibold text-slate-600 block mb-2">Densidad</label>
-                    <div id="filter-density" class="flex flex-wrap gap-2"></div>
+                    <label class="text-sm font-semibold">Densidad</label>
+                    <div id="filter-density" class="flex flex-wrap gap-2 mt-2"></div>
                 </div>
-
-                <!-- Attack Type -->
                 <div>
-                    <label class="text-sm font-semibold text-slate-600 block mb-2">Tipo de Ataque</label>
-                    <div id="filter-attack-type" class="flex flex-wrap gap-2 max-h-24 overflow-auto"></div>
+                    <label class="text-sm font-semibold">Tipo de Ataque</label>
+                    <div id="filter-attack-type" class="flex flex-wrap gap-2 mt-2 max-h-20 overflow-auto"></div>
                 </div>
-
             </div>
         </div>
+    </div>
 
-        <!-- VISUALIZACIONES -->
-        <div class="grid lg:grid-cols-12 gap-6">
+    <!-- VISUALIZACIONES -->
+    <div class="max-w-screen-2xl mx-auto px-8 mt-6 grid lg:grid-cols-12 gap-6">
 
-            <!-- Mapa -->
-            <div class="lg:col-span-7 bg-white border rounded-3xl p-5">
-                <h3 class="font-semibold mb-3">Distribución Espacial</h3>
-                <div id="main-map" style="height: 480px;"></div>
-            </div>
-
-            <!-- Estadísticas + Distribución -->
-            <div class="lg:col-span-5 space-y-6">
-                <div class="bg-white border rounded-3xl p-5">
-                    <h3 class="font-semibold mb-4">Estadísticas</h3>
-                    <div id="stats" class="grid grid-cols-3 gap-4"></div>
-                </div>
-
-                <div class="bg-white border rounded-3xl p-5">
-                    <h3 class="font-semibold mb-3">Mensajes por Tipo de Ataque</h3>
-                    <div id="attack-chart" style="height: 220px;"></div>
-                </div>
-            </div>
-
-            <!-- Trayectorias -->
-            <div class="lg:col-span-12 bg-white border rounded-3xl p-5">
-                <div class="mb-4">
-                    <label class="font-semibold">Ver Trayectoria de un Vehículo</label>
-                    <select id="sender-select" class="mt-2 w-full border rounded-2xl px-4 py-3" onchange="showTrajectory()">
-                        <option value="">-- Selecciona un vehículo --</option>
-                    </select>
-                </div>
-                <div id="trajectory-chart" style="height: 380px;"></div>
-            </div>
-
+        <!-- MAPA -->
+        <div class="lg:col-span-7 bg-white border rounded-3xl p-5">
+            <h3 class="font-semibold mb-1">1. Distribución Espacial</h3>
+            <p class="text-xs text-slate-500 mb-3">Muestra dónde se encuentran los mensajes. Los puntos rojos son ataques.</p>
+            <div id="map" style="height: 460px;"></div>
         </div>
+
+        <!-- ESTADÍSTICAS -->
+        <div class="lg:col-span-5 bg-white border rounded-3xl p-5">
+            <h3 class="font-semibold mb-3">Estadísticas Actuales</h3>
+            <div id="stats" class="grid grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- GRÁFICO DE ATAQUES -->
+        <div class="lg:col-span-5 bg-white border rounded-3xl p-5">
+            <h3 class="font-semibold mb-1">2. Mensajes por Tipo de Ataque</h3>
+            <p class="text-xs text-slate-500 mb-3">Cantidad de mensajes según el tipo de ataque aplicado.</p>
+            <div id="attack-chart" style="height: 280px;"></div>
+        </div>
+
+        <!-- TRAYECTORIAS -->
+        <div class="lg:col-span-7 bg-white border rounded-3xl p-5">
+            <h3 class="font-semibold mb-1">3. Trayectoria de un Vehículo</h3>
+            <p class="text-xs text-slate-500 mb-3">Selecciona un vehículo para ver cómo se movió en el tiempo.</p>
+
+            <select id="sender-select" class="w-full border rounded-2xl px-4 py-3 mb-4" onchange="showTrajectory()">
+                <option value="">-- Selecciona un vehículo --</option>
+            </select>
+
+            <div id="trajectory" style="height: 320px;"></div>
+        </div>
+
     </div>
 
     <script>
@@ -113,10 +105,9 @@
             const res = await fetch('sample_data.json');
             fullData = await res.json();
             filteredData = [...fullData];
-
             initFilters();
-            updateAllCharts();
-            populateVehicleSelector();
+            updateAll();
+            populateSenders();
         }
 
         function createChip(text, type) {
@@ -136,51 +127,39 @@
         }
 
         function initFilters() {
-            // Scenario
-            const sDiv = document.getElementById('filter-scenario');
-            [...new Set(fullData.map(d => d.scenario_type))].forEach(v => {
-                sDiv.appendChild(createChip(v, 'scenario_type'));
-            });
+            const s = document.getElementById('filter-scenario');
+            [...new Set(fullData.map(d => d.scenario_type))].forEach(v => s.appendChild(createChip(v, 'scenario_type')));
 
-            // Density
-            const dDiv = document.getElementById('filter-density');
-            [...new Set(fullData.map(d => d.density))].forEach(v => {
-                dDiv.appendChild(createChip(v, 'density'));
-            });
+            const d = document.getElementById('filter-density');
+            [...new Set(fullData.map(d => d.density))].forEach(v => d.appendChild(createChip(v, 'density')));
 
-            // Attack Type
-            const aDiv = document.getElementById('filter-attack-type');
-            [...new Set(fullData.map(d => d.attack_type))].forEach(v => {
-                aDiv.appendChild(createChip(v, 'attack_type'));
-            });
+            const a = document.getElementById('filter-attack-type');
+            [...new Set(fullData.map(d => d.attack_type))].forEach(v => a.appendChild(createChip(v, 'attack_type')));
         }
 
         function applyFilters() {
             const activeChips = document.querySelectorAll('.filter-chip.active');
-
             let result = fullData;
 
             activeChips.forEach(chip => {
-                const type = chip.dataset.type;
-                const value = chip.dataset.value;
-                result = result.filter(item => item[type] === value);
+                result = result.filter(item => item[chip.dataset.type] === chip.dataset.value);
             });
 
             filteredData = result;
-            updateAllCharts();
+            updateAll();
         }
 
-        function resetAllFilters() {
-            document.querySelectorAll('.filter-chip').forEach(chip => {
-                chip.classList.add('active');
-                chip.style.backgroundColor = '#0ea5e9';
-                chip.style.color = 'white';
+        function resetFilters() {
+            document.querySelectorAll('.filter-chip').forEach(c => {
+                c.classList.add('active');
+                c.style.backgroundColor = '#0ea5e9';
+                c.style.color = 'white';
             });
             filteredData = [...fullData];
-            updateAllCharts();
+            updateAll();
         }
 
-        function updateAllCharts() {
+        function updateAll() {
             createMap();
             updateStats();
             updateAttackChart();
@@ -189,7 +168,7 @@
         function createMap() {
             const data = filteredData.length > 0 ? filteredData : fullData;
 
-            const trace = {
+            Plotly.react('map', [{
                 x: data.map(d => d.pos_x),
                 y: data.map(d => d.pos_y),
                 mode: 'markers',
@@ -199,14 +178,12 @@
                     size: 5,
                     opacity: 0.7
                 },
-                text: data.map(d => `${d.sender} | ${d.attack_type}<br>Latencia: ${d.latency?.toFixed(3)}s`),
+                text: data.map(d => `${d.sender} | ${d.attack_type}`),
                 hovertemplate: '%{text}<extra></extra>'
-            };
-
-            Plotly.react('main-map', [trace], {
-                title: 'Posición de los mensajes',
+            }], {
+                title: 'Posición de los mensajes (filtrados)',
                 autosize: true
-            }, {responsive: true});
+            });
         }
 
         function updateStats() {
@@ -216,9 +193,14 @@
             const pct = total > 0 ? ((attacks / total) * 100).toFixed(1) : 0;
 
             document.getElementById('stats').innerHTML = `
-                <div class="text-center"><div class="text-2xl font-bold">${total}</div><div class="text-xs">Mensajes</div></div>
-                <div class="text-center"><div class="text-2xl font-bold text-red-500">${pct}%</div><div class="text-xs">Ataques</div></div>
-                <div class="text-center"><div class="text-2xl font-bold">${data.length > 0 ? data[0].scenario_type : '-'}</div><div class="text-xs">Escenario</div></div>
+                <div class="text-center p-3 bg-slate-50 rounded-2xl">
+                    <div class="text-3xl font-bold">${total}</div>
+                    <div class="text-xs">Mensajes</div>
+                </div>
+                <div class="text-center p-3 bg-slate-50 rounded-2xl">
+                    <div class="text-3xl font-bold text-red-500">${pct}%</div>
+                    <div class="text-xs">Son ataques</div>
+                </div>
             `;
         }
 
@@ -232,17 +214,16 @@
                 y: Object.values(counts),
                 type: 'bar',
                 marker: { color: '#0ea5e9' }
-            }], { title: 'Por Tipo de Ataque', autosize: true });
+            }], { title: 'Cantidad de mensajes por tipo de ataque', autosize: true });
         }
 
-        function populateVehicleSelector() {
-            const select = document.getElementById('sender-select');
-            const senders = [...new Set(fullData.map(d => d.sender))].slice(0, 60);
-            senders.forEach(s => {
+        function populateSenders() {
+            const sel = document.getElementById('sender-select');
+            [...new Set(fullData.map(d => d.sender))].slice(0, 50).forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s;
                 opt.textContent = s;
-                select.appendChild(opt);
+                sel.appendChild(opt);
             });
         }
 
@@ -253,12 +234,12 @@
             const traj = fullData.filter(d => d.sender === sender).sort((a,b) => a.sendTime - b.sendTime);
             const color = traj[0].attack_label === "Ataque" ? '#E63946' : '#2E86AB';
 
-            Plotly.react('trajectory-chart', [{
+            Plotly.react('trajectory', [{
                 x: traj.map(d => d.pos_x),
                 y: traj.map(d => d.pos_y),
                 mode: 'lines+markers',
                 line: { color: color, width: 2.5 }
-            }], { title: `Trayectoria de ${sender}`, autosize: true });
+            }], { title: `Trayectoria del vehículo: ${sender}`, autosize: true });
         }
 
         window.onload = loadData;
