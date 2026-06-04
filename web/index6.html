@@ -53,20 +53,17 @@
         </div>
     </div>
 
-    <!-- PREGUNTA 2 (CORREGIDA) -->
+    <!-- PREGUNTA 2 -->
     <div class="max-w-screen-2xl mx-auto px-8 py-8 border-t bg-white">
         <div class="grid lg:grid-cols-12 gap-8">
             <div class="lg:col-span-5">
                 <span class="text-sky-600 font-bold">02</span>
                 <h2 class="text-2xl font-bold mt-2">¿Se pueden distinguir visualmente las trayectorias?</h2>
-                <p class="mt-3 text-slate-600">Selecciona un vehículo para ver cómo se movió en el tiempo.</p>
+                <p class="mt-3 text-slate-600">Selecciona un vehículo para ver su trayectoria.</p>
 
-                <div class="mt-4">
-                    <label class="text-sm font-semibold">Vehículo:</label>
-                    <select id="sender-select" class="w-full mt-2 border rounded-2xl px-4 py-3" onchange="showTrajectory()">
-                        <option value="">-- Selecciona un vehículo --</option>
-                    </select>
-                </div>
+                <select id="sender-select" class="w-full mt-4 border rounded-2xl px-4 py-3" onchange="showTrajectory()">
+                    <option value="">-- Selecciona un vehículo --</option>
+                </select>
             </div>
             <div class="lg:col-span-7">
                 <div class="bg-white border rounded-3xl p-5">
@@ -76,8 +73,29 @@
         </div>
     </div>
 
+    <!-- PREGUNTA 3 + 04 -->
+    <div class="max-w-screen-2xl mx-auto px-8 py-8 border-t">
+        <div class="max-w-3xl mb-8">
+            <span class="text-sky-600 font-bold">03 + 04</span>
+            <h2 class="text-2xl font-bold mt-2">Relación densidad, velocidad y tipos de ataques</h2>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6">
+            <!-- Estadísticas -->
+            <div class="bg-white border rounded-3xl p-5">
+                <h3 class="font-semibold mb-3">Comparación de Latencia y Velocidad</h3>
+                <div id="stats-q3" style="height: 320px;"></div>
+            </div>
+            <!-- Ataques por tipo -->
+            <div class="bg-white border rounded-3xl p-5">
+                <h3 class="font-semibold mb-3">Mensajes por Tipo de Ataque</h3>
+                <div id="attack-type-q4" style="height: 320px;"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- EXPLORADOR -->
-    <div id="explorador" class="max-w-screen-2xl mx-auto px-8 py-8 border-t">
+    <div id="explorador" class="max-w-screen-2xl mx-auto px-8 py-8 border-t bg-slate-900 text-white">
         <h2 class="text-2xl font-bold mb-4">Explorador Interactivo</h2>
 
         <div class="bg-white border rounded-3xl p-6 mb-6">
@@ -89,10 +107,10 @@
         </div>
 
         <div class="grid lg:grid-cols-12 gap-6">
-            <div class="lg:col-span-7 bg-white border rounded-3xl p-5">
+            <div class="lg:col-span-7 bg-white rounded-3xl p-5 text-slate-900">
                 <div id="explorer-map" style="height: 460px;"></div>
             </div>
-            <div class="lg:col-span-5 bg-white border rounded-3xl p-5">
+            <div class="lg:col-span-5 bg-white rounded-3xl p-5 text-slate-900">
                 <div id="explorer-stats" class="grid grid-cols-2 gap-4"></div>
             </div>
         </div>
@@ -160,16 +178,49 @@
         function renderAllCharts() {
             const data = filteredData.length > 0 ? filteredData : fullData;
 
-            // Mapa principal (Pregunta 1)
+            // === PREGUNTA 1 ===
             Plotly.react('map-q1', [{
                 x: data.map(d => d.pos_x),
                 y: data.map(d => d.pos_y),
                 mode: 'markers',
                 type: 'scatter',
                 marker: { color: data.map(d => d.attack_label === "Ataque" ? '#E63946' : '#0284c8'), size: 5 }
-            }], { title: 'Distribución espacial de mensajes', autosize: true });
+            }], { title: 'Distribución espacial', autosize: true });
 
-            // Mapa del explorador
+            // === PREGUNTA 3: Comparación Latencia / Velocidad ===
+            const normal = data.filter(d => d.attack_label === "Normal");
+            const attack = data.filter(d => d.attack_label === "Ataque");
+
+            Plotly.react('stats-q3', [
+                {
+                    y: normal.map(d => d.latency),
+                    type: 'box',
+                    name: 'Normal',
+                    marker: { color: '#0284c8' }
+                },
+                {
+                    y: attack.map(d => d.latency),
+                    type: 'box',
+                    name: 'Ataque',
+                    marker: { color: '#E63946' }
+                }
+            ], {
+                title: 'Latencia por tipo de mensaje',
+                yaxis: { title: 'Latencia (s)' },
+                autosize: true
+            });
+
+            // === PREGUNTA 4: Tipo de Ataque ===
+            const counts = {};
+            data.forEach(d => counts[d.attack_type] = (counts[d.attack_type] || 0) + 1);
+            Plotly.react('attack-type-q4', [{
+                x: Object.keys(counts),
+                y: Object.values(counts),
+                type: 'bar',
+                marker: { color: '#0284c8' }
+            }], { title: 'Mensajes por Tipo de Ataque', autosize: true });
+
+            // === EXPLORADOR ===
             Plotly.react('explorer-map', [{
                 x: data.map(d => d.pos_x),
                 y: data.map(d => d.pos_y),
@@ -178,7 +229,6 @@
                 marker: { color: data.map(d => d.attack_label === "Ataque" ? '#E63946' : '#0284c8'), size: 5 }
             }], { title: 'Mapa (filtrado)', autosize: true });
 
-            // Estadísticas
             const total = data.length;
             const attacks = data.filter(d => d.attack_label === "Ataque").length;
             const pct = total > 0 ? ((attacks / total) * 100).toFixed(1) : 0;
@@ -187,22 +237,11 @@
                 <div class="text-center"><div class="text-3xl font-bold">${total}</div><div class="text-xs">Mensajes</div></div>
                 <div class="text-center"><div class="text-3xl font-bold text-red-500">${pct}%</div><div class="text-xs">Ataques</div></div>
             `;
-
-            // Gráfico de ataques
-            const counts = {};
-            data.forEach(d => counts[d.attack_type] = (counts[d.attack_type] || 0) + 1);
-            Plotly.react('explorer-attack-chart', [{
-                x: Object.keys(counts),
-                y: Object.values(counts),
-                type: 'bar',
-                marker: { color: '#0284c8' }
-            }], { title: 'Mensajes por Tipo de Ataque', autosize: true });
         }
 
         function populateSenderSelect() {
             const select = document.getElementById('sender-select');
             const senders = [...new Set(fullData.map(d => d.sender))].slice(0, 60);
-
             senders.forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s;
@@ -215,24 +254,15 @@
             const sender = document.getElementById('sender-select').value;
             if (!sender) return;
 
-            const traj = fullData
-                .filter(d => d.sender === sender)
-                .sort((a, b) => a.sendTime - b.sendTime);
-
-            if (traj.length === 0) return;
-
+            const traj = fullData.filter(d => d.sender === sender).sort((a,b) => a.sendTime - b.sendTime);
             const color = traj[0].attack_label === "Ataque" ? '#E63946' : '#0284c8';
 
             Plotly.react('trajectory-q2', [{
                 x: traj.map(d => d.pos_x),
                 y: traj.map(d => d.pos_y),
                 mode: 'lines+markers',
-                line: { color: color, width: 2.5 },
-                marker: { size: 5, color: color }
-            }], {
-                title: `Trayectoria del vehículo: ${sender}`,
-                autosize: true
-            });
+                line: { color: color, width: 2.5 }
+            }], { title: `Trayectoria de ${sender}`, autosize: true });
         }
 
         window.onload = loadData;
