@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeReMi Viz | Privacidad en VANETs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .section-header { font-size: 1.65rem; font-weight: 700; letter-spacing: -0.025em; }
+        .filter-chip {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            padding: 6px 14px;
+            border: 1px solid #94a3b8;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+        }
+        .filter-chip.active {
+            background-color: #0284c8;
+            color: white;
+            border-color: #0284c8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b sticky top-0 z-50">
+        <div class="max-w-screen-2xl mx-auto px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-x-3">
+                <div class="w-9 h-9 bg-sky-600 rounded-2xl flex items-center justify-center">
+                    <i class="fa-solid fa-shield-halved text-white"></i>
+                </div>
+                <span class="font-semibold text-2xl">VeReMi Viz</span>
+            </div>
+            <a href="#explorador" class="px-5 py-2 bg-sky-600 text-white rounded-3xl text-sm font-medium">Ir al Explorador</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="max-w-screen-2xl mx-auto px-8 pt-10 pb-8">
+        <div class="max-w-3xl">
+            <h1 class="text-5xl font-bold tracking-tighter">Privacidad en Peligro:<br> Análisis de Ataques en VANETs</h1>
+            <p class="mt-4 text-xl text-slate-600">Visualización interactiva de misbehaviors utilizando datos procesados de escenarios InTAS.</p>
+        </div>
+    </div>
+
+    <!-- CONTEXTO -->
+    <div class="max-w-screen-2xl mx-auto px-8 pb-10">
+        <div class="bg-white border rounded-3xl p-8">
+            <h2 class="font-semibold text-xl mb-4">Contexto del Proyecto</h2>
+            <p class="text-slate-600">Este proyecto analiza el dataset <strong>VeReMi Multiattack</strong> procesado a partir de escenarios de simulación InTAS. El objetivo es responder cuatro preguntas clave sobre riesgos de privacidad y seguridad en redes vehiculares.</p>
+        </div>
+    </div>
+
+    <!-- PREGUNTA 1 -->
+    <div id="pregunta1" class="max-w-screen-2xl mx-auto px-8 py-10 border-t">
+        <div class="grid lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-5">
+                <span class="text-sky-600 font-bold">01</span>
+                <h2 class="section-header mt-2">¿Qué zonas concentran mayor riesgo de falsificación de posición?</h2>
+                <p class="mt-4 text-slate-600">Los ataques de posición generan patrones espaciales anómalos. A continuación se observa la distribución de mensajes normales vs ataques.</p>
+            </div>
+            <div class="lg:col-span-7">
+                <div class="bg-white border rounded-3xl p-5">
+                    <div id="map-q1" style="height: 420px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PREGUNTA 2 -->
+    <div id="pregunta2" class="max-w-screen-2xl mx-auto px-8 py-10 border-t bg-white">
+        <div class="grid lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-5">
+                <span class="text-sky-600 font-bold">02</span>
+                <h2 class="section-header mt-2">¿Se pueden distinguir visualmente las trayectorias de atacantes vs normales?</h2>
+                <p class="mt-4 text-slate-600">Las trayectorias de vehículos atacantes suelen presentar comportamientos anómalos (saltos, jitter o movimientos incoherentes).</p>
+
+                <div class="mt-6">
+                    <label class="text-sm font-semibold">Seleccionar vehículo:</label>
+                    <select id="sender-select" class="w-full mt-2 border rounded-2xl px-4 py-3" onchange="updateTrajectory()">
+                        <option value="">-- Selecciona un vehículo --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="lg:col-span-7">
+                <div class="bg-white border rounded-3xl p-5">
+                    <div id="trajectory-q2" style="height: 420px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PREGUNTA 3 y 4 -->
+    <div id="pregunta3" class="max-w-screen-2xl mx-auto px-8 py-10 border-t">
+        <div class="max-w-3xl mb-8">
+            <span class="text-sky-600 font-bold">03 + 04</span>
+            <h2 class="section-header mt-2">Relación entre densidad, velocidad y tipos de ataques más evidentes</h2>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6">
+            <div class="bg-white border rounded-3xl p-5">
+                <h3 class="font-semibold mb-3">Estadísticas de Latencia y Velocidad</h3>
+                <div id="stats-q3" style="height: 320px;"></div>
+            </div>
+            <div class="bg-white border rounded-3xl p-5">
+                <h3 class="font-semibold mb-3">% de Ataques por Escenario y Densidad</h3>
+                <div id="heatmap-q3" style="height: 320px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXPLORADOR COMPLETO -->
+    <div id="explorador" class="max-w-screen-2xl mx-auto px-8 py-10 border-t bg-slate-900 text-white">
+        <div class="max-w-3xl mb-8">
+            <span class="text-sky-400 font-bold">EXPLORADOR AVANZADO</span>
+            <h2 class="section-header mt-2 text-white">Explora los datos con total libertad</h2>
+        </div>
+
+        <!-- Filtros del Explorador -->
+        <div class="bg-white/10 backdrop-blur rounded-3xl p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="text-sm text-sky-300">Escenario</label>
+                    <div id="explorer-scenario" class="flex flex-wrap gap-2 mt-2"></div>
+                </div>
+                <div>
+                    <label class="text-sm text-sky-300">Densidad</label>
+                    <div id="explorer-density" class="flex flex-wrap gap-2 mt-2"></div>
+                </div>
+                <div>
+                    <label class="text-sm text-sky-300">Tipo de Ataque</label>
+                    <div id="explorer-attack-type" class="flex flex-wrap gap-2 mt-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-7 bg-white rounded-3xl p-5 text-slate-900">
+                <div id="explorer-map" style="height: 480px;"></div>
+            </div>
+            <div class="lg:col-span-5 space-y-6">
+                <div class="bg-white rounded-3xl p-5 text-slate-900">
+                    <div id="explorer-stats"></div>
+                </div>
+                <div class="bg-white rounded-3xl p-5 text-slate-900">
+                    <div id="explorer-attack-chart" style="height: 220px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fullData = [];
+        let filteredData = [];
+
+        async function loadData() {
+            const res = await fetch('sample_data.json');
+            fullData = await res.json();
+            filteredData = [...fullData];
+            initAll();
+        }
+
+        function initAll() {
+            initNarrativeFilters();
+            initExplorerFilters();
+            updateNarrativeVisualizations();
+            updateExplorerVisualizations();
+            populateSenderSelect();
+        }
+
+        // ==================== FILTROS NARRATIVA ====================
+        function createChip(text, type, containerId) {
+            const chip = document.createElement('div');
+            chip.className = `filter-chip active px-3 py-1 text-xs border`;
+            chip.textContent = text;
+            chip.dataset.type = type;
+            chip.dataset.value = text;
+
+            chip.onclick = () => {
+                chip.classList.toggle('active');
+                chip.style.backgroundColor = chip.classList.contains('active') ? '#0284c8' : '';
+                chip.style.color = chip.classList.contains('active') ? 'white' : '';
+                updateNarrativeVisualizations();
+            };
+            document.getElementById(containerId).appendChild(chip);
+        }
+
+        function initNarrativeFilters() {
+            const scenarios = [...new Set(fullData.map(d => d.scenario_type))];
+            scenarios.forEach(v => createChip(v, 'scenario_type', 'filter-scenario'));
+
+            const densities = [...new Set(fullData.map(d => d.density))];
+            densities.forEach(v => createChip(v, 'density', 'filter-density'));
+
+            const attacks = [...new Set(fullData.map(d => d.attack_type))];
+            attacks.forEach(v => createChip(v, 'attack_type', 'filter-attack-type'));
+        }
+
+        function getActiveFilters() {
+            const active = document.querySelectorAll('.filter-chip.active');
+            const filters = {};
+            active.forEach(chip => {
+                const type = chip.dataset.type;
+                if (!filters[type]) filters[type] = [];
+                filters[type].push(chip.dataset.value);
+            });
+            return filters;
+        }
+
+        function applyNarrativeFilters() {
+            const filters = getActiveFilters();
+            let result = fullData;
+
+            Object.keys(filters).forEach(type => {
+                result = result.filter(item => filters[type].includes(item[type]));
+            });
+            return result;
+        }
+
+        function updateNarrativeVisualizations() {
+            const data = applyNarrativeFilters();
+            // Aquí irían las actualizaciones de los gráficos narrativos
+            // Por ahora mostramos datos completos para simplificar
+            createNarrativeMap();
+            updateNarrativeStats();
+        }
+
+        function createNarrativeMap() {
+            const data = fullData;
+            Plotly.react('map-q1', [{
+                x: data.map(d => d.pos_x),
+                y: data.map(d => d.pos_y),
+                mode: 'markers',
+                type: 'scatter',
+                marker: { color: data.map(d => d.attack_label === "Ataque" ? '#E63946' : '#0284c8'), size: 5 }
+            }], { title: 'Distribución espacial de mensajes', autosize: true });
+        }
+
+        function updateNarrativeStats() {
+            // Placeholder para estadísticas narrativas
+        }
+
+        // ==================== EXPLORADOR ====================
+        function initExplorerFilters() {
+            // Similar a los filtros narrativos pero para el explorador
+            // (Se puede expandir)
+        }
+
+        function updateExplorerVisualizations() {
+            createExplorerMap();
+            updateExplorerStats();
+        }
+
+        function createExplorerMap() {
+            const data = filteredData.length > 0 ? filteredData : fullData;
+            Plotly.react('explorer-map', [{
+                x: data.map(d => d.pos_x),
+                y: data.map(d => d.pos_y),
+                mode: 'markers',
+                type: 'scatter',
+                marker: { color: data.map(d => d.attack_label === "Ataque" ? '#E63946' : '#0284c8'), size: 5 }
+            }], { title: 'Mapa del Explorador', autosize: true });
+        }
+
+        function updateExplorerStats() {
+            const data = filteredData.length > 0 ? filteredData : fullData;
+            document.getElementById('explorer-stats').innerHTML = `
+                <div class="text-center"><div class="text-3xl font-bold">${data.length}</div><div class="text-xs">Mensajes</div></div>
+            `;
+        }
+
+        function populateSenderSelect() {
+            const select = document.getElementById('sender-select');
+            const senders = [...new Set(fullData.map(d => d.sender))].slice(0, 50);
+            senders.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                select.appendChild(opt);
+            });
+        }
+
+        function updateTrajectory() {
+            const sender = document.getElementById('sender-select').value;
+            if (!sender) return;
+
+            const traj = fullData.filter(d => d.sender === sender).sort((a,b) => a.sendTime - b.sendTime);
+            const color = traj[0].attack_label === "Ataque" ? '#E63946' : '#0284c8';
+
+            Plotly.react('trajectory-q2', [{
+                x: traj.map(d => d.pos_x),
+                y: traj.map(d => d.pos_y),
+                mode: 'lines+markers',
+                line: { color: color, width: 2.5 }
+            }], { title: `Trayectoria: ${sender}`, autosize: true });
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
