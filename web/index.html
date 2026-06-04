@@ -3,32 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VeReMi Viz | Explorador Interactivo</title>
+    <title>VeReMi Viz | Explorador</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <style>
-        body { font-family: 'Inter', system-ui, sans-serif; }
         .filter-chip {
             transition: all 0.2s ease;
             cursor: pointer;
-            padding: 6px 12px;
-            border: 1px solid #cbd5e1;
+            padding: 6px 14px;
+            border: 1px solid #94a3b8;
             border-radius: 9999px;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             background: white;
         }
         .filter-chip.active {
-            background-color: #0ea5e9;
+            background-color: #0284c8;
             color: white;
-            border-color: #0ea5e9;
+            border-color: #0284c8;
         }
     </style>
 </head>
 <body class="bg-slate-50">
 
     <div class="max-w-screen-2xl mx-auto px-8 py-6">
-        <h1 class="text-3xl font-bold">Explorador de Ataques en VANETs</h1>
-        <p class="text-slate-600 mt-1">Usa los filtros para explorar los datos. Todo se actualiza automáticamente.</p>
+        <h1 class="text-3xl font-bold">Explorador Interactivo de Ataques</h1>
     </div>
 
     <!-- FILTROS -->
@@ -36,27 +34,29 @@
         <div class="bg-white border rounded-3xl p-6 mb-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="font-semibold">Filtros</h3>
-                <button onclick="resetFilters()"
-                        class="px-4 py-2 text-sm border rounded-2xl hover:bg-slate-100">
-                    Resetear filtros
+                <button onclick="resetFilters()" class="text-sm px-4 py-2 border rounded-2xl hover:bg-slate-100">
+                    Resetear
                 </button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
+                <!-- Escenario -->
                 <div>
                     <label class="text-sm font-semibold text-slate-600">Escenario</label>
                     <div id="filter-scenario" class="flex flex-wrap gap-2 mt-2"></div>
                 </div>
 
+                <!-- Densidad -->
                 <div>
                     <label class="text-sm font-semibold text-slate-600">Densidad</label>
                     <div id="filter-density" class="flex flex-wrap gap-2 mt-2"></div>
                 </div>
 
+                <!-- Tipo de Ataque -->
                 <div>
                     <label class="text-sm font-semibold text-slate-600">Tipo de Ataque</label>
-                    <div id="filter-attack-type" class="flex flex-wrap gap-2 mt-2 max-h-20 overflow-auto"></div>
+                    <div id="filter-attack-type" class="flex flex-wrap gap-2 mt-2"></div>
                 </div>
 
             </div>
@@ -67,8 +67,7 @@
 
             <!-- MAPA -->
             <div class="lg:col-span-7 bg-white border rounded-3xl p-5">
-                <h3 class="font-semibold mb-1">Distribución Espacial</h3>
-                <p class="text-xs text-slate-500 mb-3">Ubicación de los mensajes. Rojo = Ataque</p>
+                <h3 class="font-semibold mb-3">Distribución Espacial</h3>
                 <div id="map" style="height: 460px;"></div>
             </div>
 
@@ -78,7 +77,7 @@
                 <div id="stats" class="grid grid-cols-3 gap-4"></div>
             </div>
 
-            <!-- GRÁFICO DE ATAQUES -->
+            <!-- GRÁFICO -->
             <div class="lg:col-span-5 bg-white border rounded-3xl p-5">
                 <h3 class="font-semibold mb-3">Mensajes por Tipo de Ataque</h3>
                 <div id="attack-chart" style="height: 260px;"></div>
@@ -86,7 +85,7 @@
 
             <!-- TRAYECTORIA -->
             <div class="lg:col-span-7 bg-white border rounded-3xl p-5">
-                <h3 class="font-semibold mb-3">Trayectoria de un Vehículo</h3>
+                <h3 class="font-semibold mb-3">Trayectoria de Vehículo</h3>
                 <select id="sender-select" class="w-full border rounded-2xl px-4 py-3 mb-4" onchange="showTrajectory()">
                     <option value="">-- Selecciona un vehículo --</option>
                 </select>
@@ -104,29 +103,30 @@
             const res = await fetch('sample_data.json');
             fullData = await res.json();
             filteredData = [...fullData];
-
             initFilters();
-            updateAllVisualizations();
-            populateSenderSelect();
+            updateAll();
+            populateSenders();
         }
 
         // Crear chip de filtro
-        function createChip(text, type) {
+        function createFilterChip(text, type) {
             const chip = document.createElement('div');
-            chip.className = `filter-chip active px-3 py-1 text-xs border`;
+            chip.className = `filter-chip active px-3 py-1`;
             chip.textContent = text;
             chip.dataset.type = type;
             chip.dataset.value = text;
 
-            chip.onclick = function() {
+            chip.onclick = () => {
                 chip.classList.toggle('active');
+
                 if (chip.classList.contains('active')) {
-                    chip.style.backgroundColor = '#0ea5e9';
+                    chip.style.backgroundColor = '#0284c8';
                     chip.style.color = 'white';
                 } else {
-                    chip.style.backgroundColor = '';
-                    chip.style.color = '';
+                    chip.style.backgroundColor = 'white';
+                    chip.style.color = 'black';
                 }
+
                 applyFilters();
             };
             return chip;
@@ -134,21 +134,21 @@
 
         function initFilters() {
             // Escenario
-            const scenarioBox = document.getElementById('filter-scenario');
+            const scenarioDiv = document.getElementById('filter-scenario');
             [...new Set(fullData.map(d => d.scenario_type))].forEach(val => {
-                scenarioBox.appendChild(createChip(val, 'scenario_type'));
+                scenarioDiv.appendChild(createFilterChip(val, 'scenario_type'));
             });
 
             // Densidad
-            const densityBox = document.getElementById('filter-density');
+            const densityDiv = document.getElementById('filter-density');
             [...new Set(fullData.map(d => d.density))].forEach(val => {
-                densityBox.appendChild(createChip(val, 'density'));
+                densityDiv.appendChild(createFilterChip(val, 'density'));
             });
 
             // Tipo de Ataque
-            const attackBox = document.getElementById('filter-attack-type');
+            const attackDiv = document.getElementById('filter-attack-type');
             [...new Set(fullData.map(d => d.attack_type))].forEach(val => {
-                attackBox.appendChild(createChip(val, 'attack_type'));
+                attackDiv.appendChild(createFilterChip(val, 'attack_type'));
             });
         }
 
@@ -157,34 +157,34 @@
 
             let result = fullData;
 
-            // Agrupar chips activos por tipo
-            const filters = {};
+            // Agrupamos por tipo de filtro
+            const activeFilters = {};
             activeChips.forEach(chip => {
                 const type = chip.dataset.type;
-                if (!filters[type]) filters[type] = [];
-                filters[type].push(chip.dataset.value);
+                if (!activeFilters[type]) activeFilters[type] = [];
+                activeFilters[type].push(chip.dataset.value);
             });
 
-            // Aplicar filtros
-            Object.keys(filters).forEach(type => {
-                result = result.filter(item => filters[type].includes(item[type]));
+            // Aplicamos los filtros
+            Object.keys(activeFilters).forEach(type => {
+                result = result.filter(item => activeFilters[type].includes(item[type]));
             });
 
             filteredData = result;
-            updateAllVisualizations();
+            updateAll();
         }
 
         function resetFilters() {
             document.querySelectorAll('.filter-chip').forEach(chip => {
                 chip.classList.add('active');
-                chip.style.backgroundColor = '#0ea5e9';
+                chip.style.backgroundColor = '#0284c8';
                 chip.style.color = 'white';
             });
             filteredData = [...fullData];
-            updateAllVisualizations();
+            updateAll();
         }
 
-        function updateAllVisualizations() {
+        function updateAll() {
             createMap();
             updateStats();
             updateAttackChart();
@@ -193,24 +193,20 @@
         function createMap() {
             const data = filteredData.length > 0 ? filteredData : fullData;
 
-            const trace = {
+            Plotly.react('map', [{
                 x: data.map(d => d.pos_x),
                 y: data.map(d => d.pos_y),
                 mode: 'markers',
                 type: 'scatter',
                 marker: {
-                    color: data.map(d => d.attack_label === "Ataque" ? '#E63946' : '#2E86AB'),
+                    color: data.map(d => d.attack_label === "Ataque" ? '#E63946' : '#0284c8'),
                     size: 5,
                     opacity: 0.7
-                },
-                text: data.map(d => `${d.sender} - ${d.attack_type}`),
-                hovertemplate: '%{text}<extra></extra>'
-            };
-
-            Plotly.react('map', [trace], {
-                title: 'Ubicación de los mensajes',
+                }
+            }], {
+                title: 'Distribución espacial de mensajes',
                 autosize: true
-            }, {responsive: true});
+            });
         }
 
         function updateStats() {
@@ -234,13 +230,13 @@
                 x: Object.keys(counts),
                 y: Object.values(counts),
                 type: 'bar',
-                marker: { color: '#0ea5e9' }
-            }], { title: 'Mensajes por Tipo de Ataque', autosize: true });
+                marker: { color: '#0284c8' }
+            }], { title: 'Mensajes por tipo de ataque', autosize: true });
         }
 
-        function populateSenderSelect() {
+        function populateSenders() {
             const select = document.getElementById('sender-select');
-            const senders = [...new Set(fullData.map(d => d.sender))].slice(0, 60);
+            const senders = [...new Set(fullData.map(d => d.sender))].slice(0, 50);
             senders.forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s;
@@ -254,14 +250,14 @@
             if (!sender) return;
 
             const traj = fullData.filter(d => d.sender === sender).sort((a,b) => a.sendTime - b.sendTime);
-            const color = traj[0].attack_label === "Ataque" ? '#E63946' : '#2E86AB';
+            const color = traj[0].attack_label === "Ataque" ? '#E63946' : '#0284c8';
 
             Plotly.react('trajectory', [{
                 x: traj.map(d => d.pos_x),
                 y: traj.map(d => d.pos_y),
                 mode: 'lines+markers',
                 line: { color: color, width: 2.5 }
-            }], { title: `Trayectoria: ${sender}`, autosize: true });
+            }], { title: `Trayectoria de ${sender}`, autosize: true });
         }
 
         window.onload = loadData;
