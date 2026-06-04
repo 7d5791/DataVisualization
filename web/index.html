@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeReMi Viz | Análisis de Ataques en VANETs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .section-header { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+        .viz-card { background: white; border-radius: 16px; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05); border: 1px solid #e2e8f0; }
+        .filter-chip {
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .filter-chip.active {
+            background-color: #0ea5e9;
+            color: white;
+            border-color: #0ea5e9;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b sticky top-0 z-50">
+        <div class="max-w-screen-2xl mx-auto px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-x-3">
+                <div class="w-9 h-9 bg-sky-600 rounded-2xl flex items-center justify-center">
+                    <i class="fa-solid fa-shield-halved text-white text-xl"></i>
+                </div>
+                <span class="font-semibold text-2xl tracking-tight">VeReMi Viz</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="max-w-screen-2xl mx-auto px-8 pt-10 pb-8">
+        <div class="max-w-4xl">
+            <h1 class="text-5xl font-bold tracking-tighter">Análisis de Ataques en Redes Vehiculares</h1>
+            <p class="mt-4 text-xl text-slate-600 max-w-2xl">
+                Visualización interactiva de misbehaviors en VANETs usando datos procesados de escenarios InTAS.
+            </p>
+        </div>
+    </div>
+
+    <!-- EXPLORADOR -->
+    <div class="max-w-screen-2xl mx-auto px-8 pb-16">
+
+        <!-- Filtros -->
+        <div class="bg-white border rounded-3xl p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-lg">Filtros Interactivos</h3>
+                <button onclick="resetFilters()"
+                        class="text-sm px-4 py-2 border border-slate-300 rounded-2xl hover:bg-slate-50 flex items-center gap-x-2">
+                    <i class="fa-solid fa-undo"></i>
+                    <span>Resetear</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <!-- Scenario -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 mb-2">Tipo de Escenario</label>
+                    <div id="filter-scenario" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <!-- Density -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 mb-2">Densidad</label>
+                    <div id="filter-density" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <!-- Attack Type -->
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-semibold text-slate-600 mb-2">Tipo de Ataque</label>
+                    <div id="filter-attack-type" class="flex flex-wrap gap-2 max-h-20 overflow-auto"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Visualizaciones -->
+        <div class="grid lg:grid-cols-12 gap-6">
+
+            <!-- Mapa -->
+            <div class="lg:col-span-7 viz-card p-5">
+                <h3 class="font-semibold mb-3">Distribución Espacial</h3>
+                <div id="main-map" style="height: 480px;"></div>
+            </div>
+
+            <!-- Panel derecho -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="viz-card p-5">
+                    <h3 class="font-semibold mb-4">Estadísticas</h3>
+                    <div id="stats-panel" class="grid grid-cols-3 gap-4"></div>
+                </div>
+
+                <div class="viz-card p-5">
+                    <h3 class="font-semibold mb-3">Distribución por Tipo de Ataque</h3>
+                    <div id="attack-dist" style="height: 220px;"></div>
+                </div>
+            </div>
+
+            <!-- Trayectorias -->
+            <div class="lg:col-span-12 viz-card p-5">
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-slate-600 mb-1">Explorar Trayectoria de un Vehículo</label>
+                    <select id="sender-select" class="w-full border border-slate-300 rounded-2xl px-4 py-3 text-sm" onchange="updateTrajectory()">
+                        <option value="">-- Selecciona un vehículo --</option>
+                    </select>
+                </div>
+                <div id="trajectory-plot" style="height: 380px;"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let fullData = [];
+        let currentData = [];
+
+        async function loadData() {
+            const res = await fetch('sample_data.json');
+            fullData = await res.json();
+            currentData = [...fullData];
+            initFilters();
+            initVisualizations();
+        }
+
+        function createFilterChip(text, type) {
+            const chip = document.createElement('div');
+            chip.className = `px-3 py-1 text-xs border rounded-2xl cursor-pointer bg-white filter-chip active`;
+            chip.textContent = text;
+            chip.dataset.type = type;
+            chip.dataset.value = text;
+
+            chip.onclick = () => {
+                chip.classList.toggle('active');
+                chip.style.backgroundColor = chip.classList.contains('active') ? '#0ea5e9' : '';
+                chip.style.color = chip.classList.contains('active') ? 'white' : '';
+                applyFilters();
+            };
+            return chip;
+        }
+
+        function initFilters() {
+            const scenarioDiv = document.getElementById('filter-scenario');
+            [...new Set(fullData.map(d => d.scenario_type))].forEach(v => scenarioDiv.appendChild(createFilterChip(v, 'scenario_type')));
+
+            const densityDiv = document.getElementById('filter-density');
+            [...new Set(fullData.map(d => d.density))].forEach(v => densityDiv.appendChild(createFilterChip(v, 'density')));
+
+            const attackDiv = document.getElementById('filter-attack-type');
+            [...new Set(fullData.map(d => d.attack_type))].forEach(v => attackDiv.appendChild(createFilterChip(v, 'attack_type')));
+        }
+
+        function applyFilters() {
+            const active = document.querySelectorAll('.filter-chip.active');
+            let filtered = fullData;
+
+            active.forEach(chip => {
+                const t = chip.dataset.type;
+                const v = chip.dataset.value;
+                filtered = filtered.filter(d => d[t] === v);
+            });
+
+            currentData = filtered;
+            updateVisualizations();
+        }
+
+        function resetFilters() {
+            document.querySelectorAll('.filter-chip').forEach(c => {
+                c.classList.add('active');
+                c.style.backgroundColor = '#0ea5e9';
+                c.style.color = 'white';
+            });
+            currentData = [...fullData];
+            updateVisualizations();
+        }
+
+        function updateVisualizations() {
+            createMainMap();
+            updateStats();
+            updateAttackDistribution();
+        }
+
+        function createMainMap() {
+            const data = currentData.length ? currentData : fullData;
+            const trace = {
+                x: data.map(d => d.pos_x),
+                y: data.map(d => d.pos_y),
+                mode: 'markers',
+                type: 'scatter',
+                marker: { color: data.map(d => d.attack_label === "Ataque" ? '#E63946' : '#2E86AB'), size: 5, opacity: 0.65 },
+                text: data.map(d => `Sender: ${d.sender}<br>Tipo: ${d.attack_type}<br>Latencia: ${d.latency?.toFixed(3)}s`),
+                hovertemplate: '%{text}<extra></extra>'
+            };
+            Plotly.react('main-map', [trace], {title: 'Distribución Espacial', autosize: true}, {responsive: true});
+        }
+
+        function updateStats() {
+            const data = currentData.length ? currentData : fullData;
+            const total = data.length;
+            const attacks = data.filter(d => d.attack_label === "Ataque").length;
+            const pct = total ? ((attacks/total)*100).toFixed(1) : 0;
+
+            document.getElementById('stats-panel').innerHTML = `
+                <div class="text-center p-3 bg-slate-50 rounded-2xl">
+                    <div class="text-3xl font-bold text-sky-600">${total}</div>
+                    <div class="text-xs">Mensajes</div>
+                </div>
+                <div class="text-center p-3 bg-slate-50 rounded-2xl">
+                    <div class="text-3xl font-bold text-red-500">${pct}%</div>
+                    <div class="text-xs">Ataques</div>
+                </div>
+            `;
+        }
+
+        function updateAttackDistribution() {
+            const data = currentData.length ? currentData : fullData;
+            const counts = {};
+            data.forEach(d => counts[d.attack_type] = (counts[d.attack_type]||0) + 1);
+
+            Plotly.react('attack-dist', [{
+                x: Object.keys(counts),
+                y: Object.values(counts),
+                type: 'bar',
+                marker: {color: '#0ea5e9'}
+            }], {title: 'Mensajes por Tipo de Ataque', autosize: true});
+        }
+
+        function initVisualizations() {
+            createMainMap();
+            updateStats();
+            updateAttackDistribution();
+            populateSenders();
+        }
+
+        function populateSenders() {
+            const sel = document.getElementById('sender-select');
+            [...new Set(fullData.map(d => d.sender))].slice(0,50).forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                sel.appendChild(opt);
+            });
+        }
+
+        function updateTrajectory() {
+            const sender = document.getElementById('sender-select').value;
+            if (!sender) return;
+
+            const traj = fullData.filter(d => d.sender === sender).sort((a,b) => a.sendTime - b.sendTime);
+            const color = traj[0]?.attack_label === "Ataque" ? '#E63946' : '#2E86AB';
+
+            Plotly.react('trajectory-plot', [{
+                x: traj.map(d => d.pos_x),
+                y: traj.map(d => d.pos_y),
+                mode: 'lines+markers',
+                line: {color: color, width: 2.5}
+            }], {title: `Trayectoria: ${sender}`, autosize: true});
+        }
+
+        window.onload = () => loadData();
+    </script>
+</body>
+</html>
