@@ -32,16 +32,22 @@ Puedes acceder a la visualización directamente aquí:
 ## 📁 Estructura del Proyecto
 
 DataVisualization/
-├── data/                          # Datos originales y procesamiento
+├── data/
 │   ├── main.py
 │   └── veremi_multiattack_sample.csv
-├── figures/                       # Gráficos estáticos para el informe
+│
+├── figures/
 │   ├── 01_distribucion_espacial.png
 │   ├── 02_ejemplos_trayectorias.png
-│   └── ...
-├── web/                           # Visualización web interactiva
+│   ├── 03_velocidad_latencia.png
+│   ├── 04_tipos_de_ataque.png
+│   ├── 05_ataques_por_escenario_densidad.png
+│   └── 06_velocidad_vs_latencia.png
+│
+├── web/
 │   ├── index.html
 │   └── sample_data.json
+│
 ├── README.md
 └── LICENSE
 
