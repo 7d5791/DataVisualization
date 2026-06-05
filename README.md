@@ -20,7 +20,7 @@ Puedes acceder a la visualización directamente aquí:
 
 **→ [Ver Visualización en GitHub Pages](https://7d5791.github.io/DataVisualization/web/index.html)**
 
-## ✨ Características
+## Características
 
 - Visualización de la **distribución espacial** de mensajes normales y de ataque.
 - Exploración de **trayectorias** de vehículos individuales.
@@ -50,7 +50,7 @@ DataVisualization/
 │
 ├── README.md
 └── LICENSE
-
+```text
 
 ## Tecnologías Utilizadas
 
