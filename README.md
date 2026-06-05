@@ -29,8 +29,8 @@ Puedes acceder a la visualización directamente aquí:
 - Diseño semántico con colores diferenciados (azul = normal, rojo = ataque).
 - Publicación estática en GitHub Pages (sin necesidad de servidor).
 
-## 📁 Estructura del Proyecto
-
+## Estructura del Proyecto
+```text
 DataVisualization/
 ├── data/
 │   ├── main.py
