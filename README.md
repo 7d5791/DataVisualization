@@ -67,7 +67,7 @@ Enriquece los datos con variables como latency, speed_kmh, scenario_type, densit
 Genera una muestra representativa para uso en web.
 
 ## Licencia
-Este proyecto está bajo la licencia MIT. Ver archivo LICENSE para más detalles.
+Este proyecto está bajo la licencia GNU General Public License v3.0. Ver archivo LICENSE para más detalles.
 
 Cristhian Iza
 Universitat Oberta de Catalunya (UOC)
