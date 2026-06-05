@@ -50,7 +50,7 @@ DataVisualization/
 │
 ├── README.md
 └── LICENSE
-```` ```
+````
 
 ## Tecnologías Utilizadas
 
